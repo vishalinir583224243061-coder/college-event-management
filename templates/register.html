@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Register for Events - CampusSphere AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Page Header -->
+    <div class="text-center mb-4">
+        <span class="badge bg-gradient-primary px-3 py-2 rounded-pill mb-2">
+            <i class="fas fa-ticket-alt me-1"></i> Instant Digital Pass
+        </span>
+        <h2 class="fw-bold">Student Event Registration 🎓</h2>
+        <p class="text-muted">Register for upcoming college fests, symposiums, and workshops in seconds.</p>
+    </div>
+
+    {% if ticket_success %}
+    <!-- Server-rendered Digital Ticket Pass upon POST submission -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-7">
+            <div class="ticket-pass animate-fade-in">
+                <div class="text-center mb-3">
+                    <div class="display-6">🎉 🎟️ ✨</div>
+                    <h3 class="fw-bold mt-2 gradient-text">Registration Confirmed!</h3>
+                    <p class="text-muted small">Your official entry pass has been generated and recorded in the database.</p>
+                </div>
+                <div class="ticket-header">
+                    <div>
+                        <span class="badge bg-primary" id="ticketCategoryBadge">{{ ticket_success.category }}</span>
+                        <div class="fw-bold fs-5 mt-1" id="ticketEventTitle">{{ ticket_success.event_title }}</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="ticket-code-badge" id="ticketPassCode">{{ ticket_success.ticket_code }}</div>
+                    </div>
+                </div>
+                <div class="ticket-body-grid mb-3">
+                    <div class="ticket-field">
+                        <label>Student Name</label>
+                        <span id="ticketStudentName">{{ ticket_success.student_name }}</span>
+                    </div>
+                    <div class="ticket-field">
+                        <label>Student ID</label>
+                        <span id="ticketStudentId">{{ ticket_success.student_id }}</span>
+                    </div>
+                    <div class="ticket-field">
+                        <label>Department</label>
+                        <span id="ticketDepartment">{{ ticket_success.department }}</span>
+                    </div>
+                    <div class="ticket-field">
+                        <label>Status</label>
+                        <span class="badge bg-success-subtle text-success">Verified Pass</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="button" class="btn btn-outline-primary rounded-3" onclick="copyTicketCode()">
+                        <i class="far fa-copy me-1"></i> Copy Pass Code
+                    </button>
+                    <button type="button" class="btn btn-gradient" onclick="printTicketPass()">
+                        <i class="fas fa-print me-1"></i> Print / Save Pass
+                    </button>
+                    <a href="{{ url_for('events') }}" class="btn btn-secondary rounded-3">Browse More Events</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row justify-content-center g-4">
+        <!-- Registration Form Card -->
+        <div class="col-lg-7">
+            <div class="custom-card p-4 p-md-5">
+                <div class="d-flex align-items-center gap-3 mb-4 border-bottom pb-3">
+                    <div class="brand-icon-box">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">Event Pass Registration Form</h4>
+                        <p class="text-muted small mb-0">Fill in accurate college credentials to avoid duplicate pass errors</p>
+                    </div>
+                </div>
+
+                <form id="studentRegistrationForm" method="POST" action="{{ url_for('register') }}">
+                    <!-- Event Selection -->
+                    <div class="mb-3">
+                        <label class="form-label">Select Event <span class="text-danger">*</span></label>
+                        <select name="event_id" class="form-select" required>
+                            <option value="">-- Choose an upcoming campus event --</option>
+                            {% for ev in events %}
+                            <option value="{{ ev.id }}" {% if preselected_event_id == ev.id %}selected{% endif %}>
+                                {{ ev.title }} ({{ ev.category }}) — {{ ev.event_date }} [{{ ev.registered_count }}/{{ ev.capacity }} seats]
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Student Full Name -->
+                    <div class="mb-3">
+                        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user text-muted"></i></span>
+                            <input type="text" name="student_name" class="form-control" placeholder="e.g. Priya Sharma" required>
+                        </div>
+                    </div>
+
+                    <!-- College Email -->
+                    <div class="mb-3">
+                        <label class="form-label">College Email ID <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope text-muted"></i></span>
+                            <input type="email" name="student_email" class="form-control" placeholder="priya.sharma@college.edu" required>
+                        </div>
+                        <div class="form-text small">Duplicates for the same event are prevented automatically.</div>
+                    </div>
+
+                    <!-- Student ID & Department Row -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Student Roll / ID No. <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-id-badge text-muted"></i></span>
+                                <input type="text" name="student_id" class="form-control text-uppercase" placeholder="23CSE045" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Department <span class="text-danger">*</span></label>
+                            <select name="department" class="form-select" required>
+                                <option value="CSE">CSE (Computer Science)</option>
+                                <option value="AI & DS">AI & Data Science</option>
+                                <option value="ECE">ECE (Electronics & Comm)</option>
+                                <option value="IT">IT (Information Tech)</option>
+                                <option value="MECH">MECH (Mechanical)</option>
+                                <option value="CIVIL">CIVIL (Civil Engg)</option>
+                                <option value="MBA">MBA (Management)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Phone Number & Academic Year Row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Phone / WhatsApp</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-phone text-muted"></i></span>
+                                <input type="tel" name="phone" class="form-control" placeholder="9876543210">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Year of Study</label>
+                            <select name="year_of_study" class="form-select">
+                                <option value="1st Year">1st Year (Freshman)</option>
+                                <option value="2nd Year">2nd Year (Sophomore)</option>
+                                <option value="3rd Year" selected>3rd Year (Junior)</option>
+                                <option value="4th Year">4th Year (Senior)</option>
+                                <option value="Postgraduate">Postgraduate / Research</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="regSubmitBtn" class="btn btn-gradient w-100 py-3 fs-6">
+                        <i class="fas fa-ticket-alt me-2"></i> Confirm Registration & Generate Pass
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Information & Guidelines Sidebar -->
+        <div class="col-lg-5">
+            <div class="custom-card mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-shield-halved text-success me-2"></i> Registration Guidelines</h5>
+                <ul class="list-unstyled d-flex flex-column gap-3 small text-muted mb-0">
+                    <li class="d-flex gap-2">
+                        <i class="fas fa-check-circle text-primary mt-1"></i>
+                        <span><strong>One Pass Per Student:</strong> Multiple registrations using the same Student ID or email for the same event are rejected.</span>
+                    </li>
+                    <li class="d-flex gap-2">
+                        <i class="fas fa-check-circle text-primary mt-1"></i>
+                        <span><strong>Seat Reservation:</strong> Entries are allocated on a first-come, first-served basis according to room capacity limits.</span>
+                    </li>
+                    <li class="d-flex gap-2">
+                        <i class="fas fa-check-circle text-primary mt-1"></i>
+                        <span><strong>Entry Check-in:</strong> Present the digital ticket pass (QR code / code string) alongside your college identity card at the desk.</span>
+                    </li>
+                    <li class="d-flex gap-2">
+                        <i class="fas fa-check-circle text-primary mt-1"></i>
+                        <span><strong>Participation Certificates:</strong> Verified attendees will receive verifiable certificates upon event completion.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- AI Help Card -->
+            <div class="custom-card" style="background: linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(253, 121, 168, 0.1) 100%);">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="fs-4">🤖</span>
+                    <h6 class="fw-bold mb-0">Need Help Choosing an Event?</h6>
+                </div>
+                <p class="small text-muted mb-3">Our AI Agent can recommend events based on your department, career goals, and interests.</p>
+                <a href="{{ url_for('ai_agent_page') }}" class="btn btn-sm btn-gradient w-100">
+                    <i class="fas fa-sparkles me-1"></i> Ask AI Assistant
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/registration.js') }}"></script>
+{% endblock %}

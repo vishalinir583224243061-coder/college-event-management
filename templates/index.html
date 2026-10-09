@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - CampusSphere AI Event Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-4">
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-gradient-primary px-3 py-2 rounded-pill mb-3">
+                    <i class="fas fa-sparkles me-1"></i> AI-Powered Campus Platform
+                </span>
+                <h1 class="display-5 fw-bold mb-3">
+                    Welcome to <span class="gradient-text">CampusSphere AI</span> 🎓✨
+                </h1>
+                <p class="lead text-muted mb-4" style="max-width: 680px;">
+                    The ultimate smart hub for college symposiums, workshops, cultural fests, sports championships, and instant student ticket registrations. Powered by autonomous AI planning.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('events') }}" class="btn btn-gradient btn-lg">
+                        <i class="fas fa-compass me-2"></i> Explore Events
+                    </a>
+                    <a href="{{ url_for('ai_agent_page') }}" class="btn btn-glass btn-lg">
+                        <i class="fas fa-robot text-purple me-2"></i> Launch AI Agent
+                    </a>
+                    <button class="btn btn-outline-primary btn-lg rounded-3" data-bs-toggle="modal" data-bs-target="#createEventModal">
+                        <i class="fas fa-plus-circle me-2"></i> Host New Event
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-4 d-none d-lg-block text-center position-relative">
+                <div style="font-size: 7rem; animation: floatAnim 3s ease-in-out infinite;">
+                    🎪
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 Key Stat Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Total Events -->
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-glow-1">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Total Events</div>
+                        <div class="stat-value text-primary">{{ metrics.total_events }}</div>
+                        <div class="small text-muted mt-1"><i class="fas fa-layer-group text-primary me-1"></i> Across all 5 categories</div>
+                    </div>
+                    <div class="icon-wrapper bg-primary-subtle text-primary">
+                        <i class="fas fa-calendar-star"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registered Students -->
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-glow-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Registered Students</div>
+                        <div class="stat-value" style="color: var(--accent-pink);">{{ metrics.total_registrations }}</div>
+                        <div class="small text-muted mt-1"><i class="fas fa-user-check text-danger me-1"></i> Verified ticket passes</div>
+                    </div>
+                    <div class="icon-wrapper" style="background: rgba(253, 121, 168, 0.15); color: #FD79A8;">
+                        <i class="fas fa-users-gear"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-glow-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Upcoming Events</div>
+                        <div class="stat-value text-info">{{ metrics.upcoming_events }}</div>
+                        <div class="small text-muted mt-1"><i class="fas fa-clock text-info me-1"></i> Scheduled on campus</div>
+                    </div>
+                    <div class="icon-wrapper bg-info-subtle text-info">
+                        <i class="fas fa-hourglass-start"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed Events -->
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-glow-4">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Completed Events</div>
+                        <div class="stat-value text-success">{{ metrics.completed_events }}</div>
+                        <div class="small text-muted mt-1"><i class="fas fa-check-circle text-success me-1"></i> Successfully delivered</div>
+                    </div>
+                    <div class="icon-wrapper bg-success-subtle text-success">
+                        <i class="fas fa-award"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Analytics Section -->
+    <div class="row g-4 mb-4">
+        <!-- Category Distribution Donut -->
+        <div class="col-lg-5">
+            <div class="custom-card h-100">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1">Event Category Distribution</h5>
+                        <p class="text-muted small mb-0">Participation across academic & cultural genres</p>
+                    </div>
+                    <span class="badge bg-purple-subtle text-purple"><i class="fas fa-chart-pie me-1"></i> Category View</span>
+                </div>
+                <div style="height: 280px; position: relative;">
+                    <canvas id="categoryDonutChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Department Participation Bar Chart -->
+        <div class="col-lg-7">
+            <div class="custom-card h-100">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1">Department-wise Student Engagement</h5>
+                        <p class="text-muted small mb-0">Total registrations recorded per academic department</p>
+                    </div>
+                    <span class="badge bg-primary-subtle text-primary"><i class="fas fa-building-columns me-1"></i> Departments</span>
+                </div>
+                <div style="height: 280px; position: relative;">
+                    <canvas id="deptBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Upcoming Events Section -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="fw-bold mb-1">🌟 Featured Upcoming Events</h4>
+            <p class="text-muted small mb-0">Top marquee campus events happening soon</p>
+        </div>
+        <a href="{{ url_for('events') }}" class="btn btn-sm btn-outline-primary rounded-3">
+            View All Events <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+    </div>
+
+    <div class="row g-4 mb-5">
+        {% for ev in metrics.featured_events %}
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="event-card">
+                <div class="event-poster-wrapper">
+                    <img src="{{ ev.poster_url }}" class="event-poster-img" alt="{{ ev.title }}" loading="lazy">
+                    <span class="event-badge-category badge-{{ ev.category|lower }}">{{ ev.category }}</span>
+                    <span class="event-status-badge bg-dark-subtle text-white">
+                        <i class="fas fa-dot-circle text-success me-1"></i> Open
+                    </span>
+                </div>
+                <div class="event-card-body">
+                    <div class="event-meta-row">
+                        <span><i class="far fa-calendar-alt text-primary me-1"></i> {{ ev.event_date }}</span>
+                        <span><i class="far fa-clock text-warning me-1"></i> {{ ev.event_time }}</span>
+                    </div>
+                    <h5 class="event-title">{{ ev.title }}</h5>
+                    <p class="event-desc">{{ ev.description }}</p>
+
+                    <div class="small text-muted mb-2">
+                        <i class="fas fa-map-marker-alt text-danger me-1"></i> {{ ev.venue }}
+                    </div>
+
+                    <!-- Capacity indicator -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>Seats: <strong>{{ ev.registered_count }}/{{ ev.capacity }}</strong></span>
+                            <span>{{ ((ev.registered_count / ev.capacity) * 100)|round(0)|int }}% filled</span>
+                        </div>
+                        <div class="custom-progress">
+                            <div class="custom-progress-bar" style="width: {{ [((ev.registered_count / ev.capacity) * 100), 100]|min }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto d-flex gap-2">
+                        <a href="{{ url_for('event_detail', event_id=ev.id) }}" class="btn btn-sm btn-outline-primary flex-grow-1 rounded-3">
+                            Details
+                        </a>
+                        <a href="{{ url_for('register', event_id=ev.id) }}" class="btn btn-sm btn-gradient flex-grow-1">
+                            Register
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Activity & Notifications Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Recent Registrations Feed -->
+        <div class="col-lg-7">
+            <div class="custom-card h-100">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1">⚡ Live Registration Stream</h5>
+                        <p class="text-muted small mb-0">Recent verified student pass generations</p>
+                    </div>
+                    <a href="{{ url_for('participants') }}" class="btn btn-sm btn-link text-primary p-0">Full List</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table custom-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Department</th>
+                                <th>Event</th>
+                                <th>Pass Code</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in metrics.recent_registrations %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ r.student_name }}</div>
+                                    <div class="text-muted small">{{ r.student_id }}</div>
+                                </td>
+                                <td><span class="badge bg-secondary-subtle text-secondary">{{ r.department }}</span></td>
+                                <td>
+                                    <span class="fw-semibold text-truncate d-inline-block" style="max-width: 220px;" title="{{ r.event_title }}">
+                                        {{ r.event_title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary font-monospace">{{ r.ticket_code }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campus Notice Bulletin -->
+        <div class="col-lg-5">
+            <div class="custom-card h-100">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1">📢 Campus Bulletin & Alerts</h5>
+                        <p class="text-muted small mb-0">Real-time alerts and schedule updates</p>
+                    </div>
+                    <span class="badge bg-info-subtle text-info"><i class="fas fa-bell me-1"></i> Live</span>
+                </div>
+                <div class="d-flex flex-column gap-3">
+                    {% for n in metrics.recent_notifications %}
+                    <div class="p-3 rounded-3 border" style="background: var(--bg-surface-elevated);">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold small">{{ n.title }}</span>
+                            <span class="text-muted small" style="font-size: 0.75rem;"><i class="far fa-clock me-1"></i> {{ n.created_at[:10] }}</span>
+                        </div>
+                        <p class="text-muted small mb-0">{{ n.message }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<style>
+@keyframes floatAnim {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+</style>
+{% endblock %}

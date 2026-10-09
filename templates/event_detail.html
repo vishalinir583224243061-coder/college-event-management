@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.title }} - CampusSphere AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-4">
+
+    <!-- Back link -->
+    <div class="mb-3">
+        <a href="{{ url_for('events') }}" class="btn btn-sm btn-glass">
+            <i class="fas fa-arrow-left me-1"></i> Back to Events
+        </a>
+    </div>
+
+    <!-- Event Hero Banner -->
+    <div class="custom-card p-0 mb-4 overflow-hidden">
+        <div class="row g-0">
+            <div class="col-lg-5 position-relative" style="min-height: 320px;">
+                <img src="{{ event.poster_url }}" alt="{{ event.title }}" class="w-100 h-100" style="object-fit: cover;">
+                <span class="event-badge-category badge-{{ event.category|lower }} m-3">
+                    {{ event.category }}
+                </span>
+            </div>
+            <div class="col-lg-7 p-4 p-lg-5 d-flex flex-direction-column justify-content-between">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge {% if event.status == 'upcoming' %}bg-success{% else %}bg-secondary{% endif %} px-3 py-1">
+                            {{ event.status|upper }}
+                        </span>
+                        <span class="text-muted small"><i class="fas fa-building-columns text-primary me-1"></i> {{ event.organizer }}</span>
+                    </div>
+
+                    <h2 class="display-6 fw-bold mb-3">{{ event.title }}</h2>
+                    <p class="lead text-muted fs-6 mb-4">{{ event.description }}</p>
+
+                    <!-- Key Event Details Grid -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background: var(--bg-surface-elevated);">
+                                <div class="fs-3 text-primary"><i class="far fa-calendar-alt"></i></div>
+                                <div>
+                                    <div class="text-muted small">Date & Time</div>
+                                    <div class="fw-bold">{{ event.event_date }} at {{ event.event_time }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background: var(--bg-surface-elevated);">
+                                <div class="fs-3 text-danger"><i class="fas fa-map-marker-alt"></i></div>
+                                <div>
+                                    <div class="text-muted small">Campus Venue</div>
+                                    <div class="fw-bold">{{ event.venue }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Capacity Progress -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <span>Capacity Status: <strong>{{ event.registered_count }} / {{ event.capacity }} Seats</strong></span>
+                            <span>{{ ((event.registered_count / event.capacity) * 100)|round(1) }}% Filled</span>
+                        </div>
+                        <div class="custom-progress" style="height: 10px;">
+                            <div class="custom-progress-bar" style="width: {{ [((event.registered_count / event.capacity) * 100), 100]|min }}%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA Action Bar -->
+                <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                    {% if event.status == 'upcoming' %}
+                    <a href="{{ url_for('register', event_id=event.id) }}" class="btn btn-gradient px-4">
+                        <i class="fas fa-ticket-alt me-2"></i> Register Now
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('export_participants_csv', event_id=event.id) }}" class="btn btn-outline-success rounded-3">
+                        <i class="fas fa-file-csv me-1"></i> Export Participants CSV
+                    </a>
+                    <button class="btn btn-glass" onclick="openFeedbackModal()">
+                        <i class="fas fa-star text-warning me-1"></i> Leave Feedback
+                    </button>
+                    <button class="btn btn-outline-warning rounded-3" onclick="openEditEventModal({{ event.id }})">
+                        <i class="fas fa-edit me-1"></i> Edit
+                    </button>
+                    <button class="btn btn-outline-danger rounded-3" onclick="confirmDeleteEvent({{ event.id }}, '{{ event.title|replace('\'', '\\\'') }}')">
+                        <i class="fas fa-trash me-1"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Participants & Feedback Tabbed Section -->
+    <div class="row g-4">
+        <!-- Registered Participants List -->
+        <div class="col-lg-8">
+            <div class="custom-card">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1">👥 Registered Participants ({{ event.participants|length }})</h5>
+                        <p class="text-muted small mb-0">Verified student list registered for this event</p>
+                    </div>
+                    <a href="{{ url_for('export_participants_csv', event_id=event.id) }}" class="btn btn-sm btn-outline-primary rounded-3">
+                        <i class="fas fa-download me-1"></i> CSV
+                    </a>
+                </div>
+
+                {% if event.participants %}
+                <div class="table-responsive">
+                    <table class="table custom-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>ID</th>
+                                <th>Dept</th>
+                                <th>Email</th>
+                                <th>Pass Code</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in event.participants %}
+                            <tr>
+                                <td class="fw-bold">{{ p.student_name }}</td>
+                                <td><span class="badge bg-light text-dark font-monospace">{{ p.student_id }}</span></td>
+                                <td><span class="badge bg-primary-subtle text-primary">{{ p.department }}</span></td>
+                                <td class="text-muted small">{{ p.student_email }}</td>
+                                <td><span class="badge bg-success-subtle text-success font-monospace">{{ p.ticket_code }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-user-plus display-6 mb-2"></i>
+                    <p>No students registered yet. Be the first to register!</p>
+                    <a href="{{ url_for('register', event_id=event.id) }}" class="btn btn-sm btn-gradient">Register Now</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Student Reviews & Feedback -->
+        <div class="col-lg-4">
+            <div class="custom-card h-100">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1">⭐ Attendee Feedback</h5>
+                        <p class="text-muted small mb-0">Ratings and student comments</p>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary rounded-3" onclick="openFeedbackModal()">+ Add</button>
+                </div>
+
+                {% if event.feedback %}
+                <div class="d-flex flex-column gap-3">
+                    {% for fb in event.feedback %}
+                    <div class="p-3 rounded-3 border" style="background: var(--bg-surface-elevated);">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold small">{{ fb.student_name }} ({{ fb.department }})</span>
+                            <div class="text-warning small">
+                                {% for i in range(fb.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                            </div>
+                        </div>
+                        <p class="small text-muted mb-1">{{ fb.comments }}</p>
+                        <span class="text-muted small" style="font-size: 0.7rem;"><i class="far fa-clock me-1"></i> {{ fb.created_at[:10] }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="far fa-comment-dots display-6 mb-2"></i>
+                    <p class="small">No attendee reviews submitted yet for this event.</p>
+                    <button class="btn btn-sm btn-glass" onclick="openFeedbackModal()">Leave First Review</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="fas fa-star text-warning me-2"></i> Attendee Feedback</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="feedbackForm">
+                <div class="mb-3">
+                    <label class="form-label">Student Name</label>
+                    <input type="text" id="fbStudentName" class="form-control" placeholder="e.g. Rahul Sharma" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Department</label>
+                    <select id="fbDepartment" class="form-select" required>
+                        <option value="CSE">CSE</option>
+                        <option value="AI & DS">AI & DS</option>
+                        <option value="ECE">ECE</option>
+                        <option value="IT">IT</option>
+                        <option value="MECH">MECH</option>
+                        <option value="CIVIL">CIVIL</option>
+                        <option value="MBA">MBA</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Rating (1 to 5 Stars)</label>
+                    <select id="fbRating" class="form-select" required>
+                        <option value="5">⭐⭐⭐⭐⭐ 5 - Exceptional Experience</option>
+                        <option value="4">⭐⭐⭐⭐ 4 - Great Session</option>
+                        <option value="3">⭐⭐⭐ 3 - Good / Average</option>
+                        <option value="2">⭐⭐ 2 - Needs Improvement</option>
+                        <option value="1">⭐ 1 - Unsatisfactory</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Comments & Key Learnings</label>
+                    <textarea id="fbComments" class="form-control" rows="3" placeholder="Share your experience, speaker quality, or event coordination..." required></textarea>
+                </div>
+                <button type="submit" id="fbSubmitBtn" class="btn btn-gradient w-100">Submit Review</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function openFeedbackModal() {
+    const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+    modal.show();
+}
+
+document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('fbSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Submitting...';
+
+    const payload = {
+        student_name: document.getElementById('fbStudentName').value.trim(),
+        department: document.getElementById('fbDepartment').value,
+        rating: parseInt(document.getElementById('fbRating').value),
+        comments: document.getElementById('fbComments').value.trim()
+    };
+
+    try {
+        const res = await fetch('/api/events/{{ event.id }}/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('⭐ ' + data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.message || 'Failed to submit feedback', 'danger');
+            btn.disabled = false;
+            btn.innerText = 'Submit Review';
+        }
+    } catch(err) {
+        showToast('Network error while submitting feedback', 'danger');
+        btn.disabled = false;
+        btn.innerText = 'Submit Review';
+    }
+});
+</script>
+{% endblock %}

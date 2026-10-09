@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports & Analytics - CampusSphere AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-4">
+
+    <!-- Header Section -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">📈 Executive Event Analytics & Reports</h2>
+            <p class="text-muted small mb-0">Seat fill metrics, cross-departmental engagement, and verifiable CSV data exports</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('export_events_csv') }}" class="btn btn-outline-primary rounded-3">
+                <i class="fas fa-file-csv me-1"></i> Export Events Summary CSV
+            </a>
+            <a href="{{ url_for('export_participants_csv') }}" class="btn btn-gradient">
+                <i class="fas fa-download me-1"></i> Export All Participants CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Hidden JSON data for Chart.js initialization -->
+    <script id="reportsCategoryData" type="application/json">{{ reports.categories | tojson | safe }}</script>
+    <script id="reportsDeptData" type="application/json">{{ reports.departments | tojson | safe }}</script>
+
+    <!-- Top KPI Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card stat-glow-1">
+                <div class="stat-label">Events Tracked</div>
+                <div class="stat-value text-primary">{{ reports.events|length }}</div>
+                <div class="small text-muted mt-1"><i class="fas fa-calendar-check text-primary me-1"></i> In SQLite DB</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-glow-2">
+                <div class="stat-label">Top Department</div>
+                <div class="stat-value" style="color: var(--accent-pink);">
+                    {% if reports.departments %}{{ reports.departments[0].department }}{% else %}N/A{% endif %}
+                </div>
+                <div class="small text-muted mt-1"><i class="fas fa-trophy text-danger me-1"></i> Most Registrations</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-glow-3">
+                <div class="stat-label">Active Categories</div>
+                <div class="stat-value text-info">{{ reports.categories|length }}</div>
+                <div class="small text-muted mt-1"><i class="fas fa-tags text-info me-1"></i> Disciplines represented</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-glow-4">
+                <div class="stat-label">Avg. Fill Rate</div>
+                <div class="stat-value text-success">
+                    {% if reports.events %}
+                        {% set total_fill = namespace(value=0) %}
+                        {% for e in reports.events %}
+                            {% set total_fill.value = total_fill.value + e.fill_rate %}
+                        {% endfor %}
+                        {{ (total_fill.value / (reports.events|length))|round(1) }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </div>
+                <div class="small text-muted mt-1"><i class="fas fa-chart-line text-success me-1"></i> Across campus venues</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Charts Grid -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="custom-card h-100">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1">Registrations by Category</h5>
+                        <p class="text-muted small mb-0">Volume of student entries per event genre</p>
+                    </div>
+                    <span class="badge bg-primary-subtle text-primary"><i class="fas fa-chart-column me-1"></i> Bar Chart</span>
+                </div>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="reportsCategoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="custom-card h-100">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1">Department Representation</h5>
+                        <p class="text-muted small mb-0">Demographic distribution across academic branches</p>
+                    </div>
+                    <span class="badge bg-purple-subtle text-purple"><i class="fas fa-chart-pie me-1"></i> Polar Chart</span>
+                </div>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="reportsDeptChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event-wise Detailed Report Table -->
+    <div class="custom-card p-0 overflow-hidden mb-4">
+        <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-light-subtle">
+            <div>
+                <h5 class="fw-bold mb-1"><i class="fas fa-table-list text-primary me-2"></i> Comprehensive Event Performance Breakdown</h5>
+                <p class="text-muted small mb-0">Status, capacity utilisation, and participant tallies per event</p>
+            </div>
+            <a href="{{ url_for('export_events_csv') }}" class="btn btn-sm btn-outline-primary rounded-3">
+                <i class="fas fa-file-csv me-1"></i> Download CSV
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table custom-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Event Name</th>
+                        <th>Category</th>
+                        <th>Date & Venue</th>
+                        <th>Capacity</th>
+                        <th>Registered</th>
+                        <th>Fill Rate (%)</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ev in reports.events %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold">{{ ev.title }}</div>
+                            <span class="text-muted small">Event ID #{{ ev.id }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ ev.category|lower }}">{{ ev.category }}</span>
+                        </td>
+                        <td>
+                            <div class="small fw-semibold">{{ ev.event_date }}</div>
+                            <div class="text-muted small">{{ ev.venue }}</div>
+                        </td>
+                        <td class="fw-bold">{{ ev.capacity }}</td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary fs-6">{{ ev.registered_count }}</span>
+                        </td>
+                        <td style="min-width: 140px;">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>{{ ev.fill_rate }}%</span>
+                            </div>
+                            <div class="custom-progress">
+                                <div class="custom-progress-bar" style="width: {{ [ev.fill_rate, 100]|min }}%;"></div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge {% if ev.status == 'upcoming' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                {{ ev.status|capitalize }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('event_detail', event_id=ev.id) }}" class="btn btn-sm btn-outline-primary rounded-3">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/reports.js') }}"></script>
+{% endblock %}

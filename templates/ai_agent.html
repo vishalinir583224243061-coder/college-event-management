@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Event Management Agent - CampusSphere AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-4">
+
+    <!-- Hero Header -->
+    <div class="custom-card mb-4" style="background: linear-gradient(135deg, rgba(108, 92, 231, 0.12) 0%, rgba(253, 121, 168, 0.12) 100%), var(--bg-surface);">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="badge bg-gradient-primary px-3 py-2 rounded-pill mb-2">
+                    <i class="fas fa-sparkles me-1"></i> Gemini-Powered Autonomous Assistant
+                </span>
+                <h2 class="fw-bold mb-1">🤖 Smart College Event Management Agent</h2>
+                <p class="text-muted small mb-0">Ask questions grounded in live campus events, or generate schedules, proposals, reminders, and executive reports instantly.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success-subtle text-success p-2 px-3">
+                    <i class="fas fa-circle text-success me-1" style="font-size: 0.6rem;"></i> Live System Active
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Pills: Chat Assistant vs AI Power-Tools Studio -->
+    <ul class="nav nav-pills mb-4 gap-2" id="aiAgentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active filter-pill" id="chat-tab" data-bs-toggle="pill" data-bs-target="#chat-pane" type="button" role="tab" aria-selected="true">
+                <i class="fas fa-comments text-primary me-2"></i> Interactive AI Chat Assistant
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link filter-pill" id="tools-tab" data-bs-toggle="pill" data-bs-target="#tools-pane" type="button" role="tab" aria-selected="false">
+                <i class="fas fa-wand-magic-sparkles text-purple me-2"></i> AI Event Power Tools (6 Generators)
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="aiAgentTabContent">
+
+        <!-- TAB 1: INTERACTIVE CHAT -->
+        <div class="tab-pane fade show active" id="chat-pane" role="tabpanel" aria-labelledby="chat-tab">
+            <div class="row g-4">
+                <!-- Chat Window -->
+                <div class="col-lg-8">
+                    <div class="ai-chat-window">
+                        <!-- Chat Header -->
+                        <div class="ai-chat-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="brand-icon-box" style="width: 32px; height: 32px; font-size: 1rem;">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-white">CampusSphere Event Agent</h6>
+                                    <span class="small text-white-50" style="font-size: 0.75rem;">Grounded with Live SQLite Campus Database</span>
+                                </div>
+                            </div>
+                            <span class="badge bg-light text-dark small">Gemini 3.8 Flash</span>
+                        </div>
+
+                        <!-- Chat Messages Container -->
+                        <div class="ai-messages-container" id="aiMessagesContainer">
+                            <!-- Welcome Message -->
+                            <div class="chat-bubble assistant">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-gradient-primary" style="font-size: 0.72rem;">🤖 CampusSphere AI</span>
+                                </div>
+                                <div class="chat-content">
+                                    👋 <strong>Greetings! I am your Smart College Event Management Agent.</strong><br><br>
+                                    I have real-time access to the campus event database! You can ask me:
+                                    <ul class="mb-2 mt-2">
+                                        <li>📅 <em>"What upcoming events are happening on campus?"</em></li>
+                                        <li>💡 <em>"Give me creative ideas for our annual technical symposium."</em></li>
+                                        <li>📍 <em>"Where and when is the GenAI hands-on workshop?"</em></li>
+                                        <li>📝 <em>"How do students register and get digital passes?"</em></li>
+                                    </ul>
+                                    How can I assist you today? 🎉
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input Bar -->
+                        <form id="aiChatForm" class="chat-input-bar">
+                            <input type="text" id="aiChatInput" class="form-control" placeholder="Ask about events, venues, schedules, or brainstorm ideas..." autocomplete="off" required>
+                            <button type="submit" class="btn btn-gradient px-4">
+                                <i class="fas fa-paper-plane me-1"></i> Send
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Prompt Starters & Info Sidebar -->
+                <div class="col-lg-4">
+                    <div class="custom-card mb-4">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-bolt text-warning me-2"></i> Instant Query Starters</h6>
+                        <div class="d-flex flex-column gap-2">
+                            <button class="btn btn-sm btn-glass text-start py-2" onclick="sendPresetQuery('What upcoming events are happening on campus this month?')">
+                                📅 <em>What upcoming events are scheduled?</em>
+                            </button>
+                            <button class="btn btn-sm btn-glass text-start py-2" onclick="sendPresetQuery('Give me 3 viral ideas for an inter-college cultural fest!')">
+                                🎭 <em>Suggest ideas for a cultural fest</em>
+                            </button>
+                            <button class="btn btn-sm btn-glass text-start py-2" onclick="sendPresetQuery('Where is the GenAI workshop and what are the prerequisites?')">
+                                🤖 <em>Tell me about the GenAI Workshop</em>
+                            </button>
+                            <button class="btn btn-sm btn-glass text-start py-2" onclick="sendPresetQuery('How do I register for an event and receive a ticket pass?')">
+                                🎟️ <em>How do students register?</em>
+                            </button>
+                            <button class="btn btn-sm btn-glass text-start py-2" onclick="sendPresetQuery('What sports tournaments are scheduled on campus?')">
+                                🏆 <em>Tell me about sports events</em>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="custom-card" style="background: var(--bg-surface-elevated);">
+                        <h6 class="fw-bold mb-2"><i class="fas fa-microchip text-primary me-2"></i> Agent Intelligence</h6>
+                        <p class="small text-muted mb-2">This agent is deeply integrated into the college SQLite data layer. Any new event or registration is instantly reflected in the agent's knowledge base.</p>
+                        <ul class="list-unstyled small text-muted mb-0">
+                            <li><i class="fas fa-check text-success me-1"></i> Live Schedule & Venue Queries</li>
+                            <li><i class="fas fa-check text-success me-1"></i> Capacity Tracking</li>
+                            <li><i class="fas fa-check text-success me-1"></i> Offline Demo Mode Fallback</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: AI POWER TOOLS STUDIO -->
+        <div class="tab-pane fade" id="tools-pane" role="tabpanel" aria-labelledby="tools-tab">
+            <div class="row g-4">
+                <!-- Navigation accordion / tool cards -->
+                <div class="col-12">
+                    <div class="accordion custom-accordion" id="aiToolsAccordion">
+
+                        <!-- TOOL 1: SUGGEST EVENT IDEAS -->
+                        <div class="accordion-item custom-card p-0 mb-3 border-0 overflow-hidden">
+                            <h2 class="accordion-header" id="headingIdeas">
+                                <button class="accordion-button fw-bold py-3 px-4 bg-light-subtle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdeas" aria-expanded="true" aria-controls="collapseIdeas">
+                                    <span class="fs-5 me-2">💡</span> 1. Suggest Creative College Event Ideas
+                                </button>
+                            </h2>
+                            <div id="collapseIdeas" class="accordion-collapse collapse show" aria-labelledby="headingIdeas" data-bs-parent="#aiToolsAccordion">
+                                <div class="accordion-body p-4">
+                                    <form id="ideasForm" class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Category</label>
+                                            <select name="category" class="form-select">
+                                                <option value="Technical">Technical</option>
+                                                <option value="Cultural">Cultural</option>
+                                                <option value="Sports">Sports</option>
+                                                <option value="Workshop">Workshop</option>
+                                                <option value="Seminar">Seminar</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Theme / Keyword (Optional)</label>
+                                            <input type="text" name="theme" class="form-control" placeholder="e.g. AI Agents, Neon Sports, Indie Rock, Web3">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Target Audience</label>
+                                            <input type="text" name="audience" class="form-control" value="All Engineering & Degree Students">
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" id="ideasSubmitBtn" class="btn btn-gradient">
+                                                <i class="fas fa-sparkles me-1"></i> Generate 3 Creative Event Ideas
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <div id="ideasResultBox" class="mt-4 p-4 rounded-3 border" style="display: none; background: var(--bg-surface-elevated);"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOOL 2: EVENT PROPOSAL & DESCRIPTION -->
+                        <div class="accordion-item custom-card p-0 mb-3 border-0 overflow-hidden">
+                            <h2 class="accordion-header" id="headingDesc">
+                                <button class="accordion-button collapsed fw-bold py-3 px-4 bg-light-subtle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDesc" aria-expanded="false" aria-controls="collapseDesc">
+                                    <span class="fs-5 me-2">📝</span> 2. Generate Event Marketing Description & Proposal
+                                </button>
+                            </h2>
+                            <div id="collapseDesc" class="accordion-collapse collapse" aria-labelledby="headingDesc" data-bs-parent="#aiToolsAccordion">
+                                <div class="accordion-body p-4">
+                                    <form id="descForm" class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Event Name / Working Title</label>
+                                            <input type="text" name="title" class="form-control" placeholder="e.g. HackVision 2026: Multimodal AI Sprint" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Category</label>
+                                            <select name="category" class="form-select">
+                                                <option value="Technical">Technical</option>
+                                                <option value="Cultural">Cultural</option>
+                                                <option value="Sports">Sports</option>
+                                                <option value="Workshop">Workshop</option>
+                                                <option value="Seminar">Seminar</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Duration</label>
+                                            <input type="text" name="duration" class="form-control" value="1 Full Day (09:00 AM - 05:00 PM)">
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" id="descSubmitBtn" class="btn btn-gradient">
+                                                <i class="fas fa-pen-nib me-1"></i> Craft Marketing Description
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <div id="descResultBox" class="mt-4 p-4 rounded-3 border" style="display: none; background: var(--bg-surface-elevated);"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOOL 3: MINUTE-BY-MINUTE SCHEDULE -->
+                        <div class="accordion-item custom-card p-0 mb-3 border-0 overflow-hidden">
+                            <h2 class="accordion-header" id="headingSchedule">
+                                <button class="accordion-button collapsed fw-bold py-3 px-4 bg-light-subtle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSchedule" aria-expanded="false" aria-controls="collapseSchedule">
+                                    <span class="fs-5 me-2">🗓️</span> 3. Suggest Minute-by-Minute Operational Schedule
+                                </button>
+                            </h2>
+                            <div id="collapseSchedule" class="accordion-collapse collapse" aria-labelledby="headingSchedule" data-bs-parent="#aiToolsAccordion">
+                                <div class="accordion-body p-4">
+                                    <form id="scheduleForm" class="row g-3">
+                                        <div class="col-md-5">
+                                            <label class="form-label">Event Title</label>
+                                            <input type="text" name="title" class="form-control" placeholder="e.g. GenAI Agents Masterclass" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Start Time</label>
+                                            <input type="text" name="start_time" class="form-control" value="09:30 AM">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Duration (Hours)</label>
+                                            <input type="number" name="duration_hours" class="form-control" value="6" min="1" max="24">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Type</label>
+                                            <select name="event_type" class="form-select">
+                                                <option value="Workshop">Workshop</option>
+                                                <option value="Hackathon">Hackathon</option>
+                                                <option value="Cultural Fest">Cultural Fest</option>
+                                                <option value="Sports Meet">Sports Meet</option>
+                                                <option value="Seminar">Seminar</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" id="scheduleSubmitBtn" class="btn btn-gradient">
+                                                <i class="fas fa-clock me-1"></i> Generate Operational Schedule
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <div id="scheduleResultBox" class="mt-4 p-4 rounded-3 border" style="display: none; background: var(--bg-surface-elevated);"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOOL 4: REMINDER & BROADCAST COPY -->
+                        <div class="accordion-item custom-card p-0 mb-3 border-0 overflow-hidden">
+                            <h2 class="accordion-header" id="headingReminder">
+                                <button class="accordion-button collapsed fw-bold py-3 px-4 bg-light-subtle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReminder" aria-expanded="false" aria-controls="collapseReminder">
+                                    <span class="fs-5 me-2">🔔</span> 4. Generate Event Reminders & Notification Copy
+                                </button>
+                            </h2>
+                            <div id="collapseReminder" class="accordion-collapse collapse" aria-labelledby="headingReminder" data-bs-parent="#aiToolsAccordion">
+                                <div class="accordion-body p-4">
+                                    <form id="reminderForm" class="row g-3">
+                                        <div class="col-md-8">
+                                            <label class="form-label">Select Event from Database</label>
+                                            <select name="event_id" class="form-select" required>
+                                                {% for ev in events %}
+                                                <option value="{{ ev.id }}">{{ ev.title }} ({{ ev.category }}) — {{ ev.event_date }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Target Broadcast Channel</label>
+                                            <select name="channel" class="form-select">
+                                                <option value="Email">Official Email Blast</option>
+                                                <option value="WhatsApp">WhatsApp Student Broadcast</option>
+                                                <option value="Instagram">Instagram / LinkedIn Caption</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" id="reminderSubmitBtn" class="btn btn-gradient">
+                                                <i class="fas fa-bullhorn me-1"></i> Generate Broadcast Copy
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <div id="reminderResultBox" class="mt-4 p-4 rounded-3 border" style="display: none; background: var(--bg-surface-elevated);"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOOL 5: EXECUTIVE IMPACT REPORT -->
+                        <div class="accordion-item custom-card p-0 mb-3 border-0 overflow-hidden">
+                            <h2 class="accordion-header" id="headingReport">
+                                <button class="accordion-button collapsed fw-bold py-3 px-4 bg-light-subtle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReport" aria-expanded="false" aria-controls="collapseReport">
+                                    <span class="fs-5 me-2">📋</span> 5. Generate Executive Event Summary & Impact Report
+                                </button>
+                            </h2>
+                            <div id="collapseReport" class="accordion-collapse collapse" aria-labelledby="headingReport" data-bs-parent="#aiToolsAccordion">
+                                <div class="accordion-body p-4">
+                                    <form id="reportForm" class="row g-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label">Select Event for Executive Audit</label>
+                                            <select name="event_id" class="form-select" required>
+                                                {% for ev in events %}
+                                                <option value="{{ ev.id }}">{{ ev.title }} ({{ ev.category }}) — Status: {{ ev.status }} [{{ ev.registered_count }} Registrations]</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" id="reportSubmitBtn" class="btn btn-gradient">
+                                                <i class="fas fa-file-invoice me-1"></i> Generate Executive Audit Report
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <div id="reportResultBox" class="mt-4 p-4 rounded-3 border" style="display: none; background: var(--bg-surface-elevated);"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOOL 6: SUMMARIZE FEEDBACK -->
+                        <div class="accordion-item custom-card p-0 mb-3 border-0 overflow-hidden">
+                            <h2 class="accordion-header" id="headingFeedback">
+                                <button class="accordion-button collapsed fw-bold py-3 px-4 bg-light-subtle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFeedback" aria-expanded="false" aria-controls="collapseFeedback">
+                                    <span class="fs-5 me-2">📊</span> 6. Synthesize Attendee Feedback & Sentiment Analysis
+                                </button>
+                            </h2>
+                            <div id="collapseFeedback" class="accordion-collapse collapse" aria-labelledby="headingFeedback" data-bs-parent="#aiToolsAccordion">
+                                <div class="accordion-body p-4">
+                                    <form id="feedbackForm" class="row g-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label">Select Event</label>
+                                            <select name="event_id" class="form-select" required>
+                                                {% for ev in events %}
+                                                <option value="{{ ev.id }}">{{ ev.title }} ({{ ev.category }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" id="feedbackSubmitBtn" class="btn btn-gradient">
+                                                <i class="fas fa-chart-line me-1"></i> Synthesize Feedback Sentiment
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <div id="feedbackResultBox" class="mt-4 p-4 rounded-3 border" style="display: none; background: var(--bg-surface-elevated);"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/ai_assistant.js') }}"></script>
+{% endblock %}

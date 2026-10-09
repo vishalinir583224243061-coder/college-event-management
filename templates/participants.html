@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Participants Directory - CampusSphere AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-4">
+
+    <!-- Header Section -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">👥 Student Participants Directory</h2>
+            <p class="text-muted small mb-0">Live roster of verified registrations across all campus events</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('export_participants_csv', event_id=selected_event) }}" class="btn btn-outline-success rounded-3">
+                <i class="fas fa-file-csv me-1"></i> Download Participants CSV
+            </a>
+            <a href="{{ url_for('register') }}" class="btn btn-gradient">
+                <i class="fas fa-user-plus me-1"></i> Register Student
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Search Form -->
+    <div class="custom-card mb-4 p-3">
+        <form method="GET" action="{{ url_for('participants') }}" class="row g-3 align-items-center">
+            <!-- Search Input -->
+            <div class="col-lg-4 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Search by name, ID, email, or pass..." value="{{ search }}">
+                </div>
+            </div>
+
+            <!-- Event Selector -->
+            <div class="col-lg-4 col-md-6">
+                <select name="event_id" class="form-select" onchange="this.form.submit()">
+                    <option value="All">All Campus Events</option>
+                    {% for ev in events %}
+                    <option value="{{ ev.id }}" {% if selected_event|string == ev.id|string %}selected{% endif %}>
+                        {{ ev.title }} ({{ ev.category }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Department Selector -->
+            <div class="col-lg-3 col-md-6">
+                <select name="department" class="form-select" onchange="this.form.submit()">
+                    <option value="All" {% if selected_dept == 'All' %}selected{% endif %}>All Departments</option>
+                    <option value="CSE" {% if selected_dept == 'CSE' %}selected{% endif %}>CSE</option>
+                    <option value="AI & DS" {% if selected_dept == 'AI & DS' %}selected{% endif %}>AI & DS</option>
+                    <option value="ECE" {% if selected_dept == 'ECE' %}selected{% endif %}>ECE</option>
+                    <option value="IT" {% if selected_dept == 'IT' %}selected{% endif %}>IT</option>
+                    <option value="MECH" {% if selected_dept == 'MECH' %}selected{% endif %}>MECH</option>
+                    <option value="CIVIL" {% if selected_dept == 'CIVIL' %}selected{% endif %}>CIVIL</option>
+                    <option value="MBA" {% if selected_dept == 'MBA' %}selected{% endif %}>MBA</option>
+                </select>
+            </div>
+
+            <!-- Filter / Reset -->
+            <div class="col-lg-1 col-md-6 text-end">
+                <button type="submit" class="btn btn-primary w-100 rounded-3">Go</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Participants Table Card -->
+    <div class="custom-card p-0 overflow-hidden mb-4">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light-subtle">
+            <span class="fw-bold fs-6">
+                <i class="fas fa-users-viewfinder text-primary me-2"></i> Verified Attendees List ({{ participants|length }})
+            </span>
+            <span class="badge bg-primary-subtle text-primary">{{ participants|length }} Records</span>
+        </div>
+
+        {% if participants %}
+        <div class="table-responsive">
+            <table class="table custom-table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Pass Code</th>
+                        <th>Student Name</th>
+                        <th>Roll / ID</th>
+                        <th>Department</th>
+                        <th>Event</th>
+                        <th>Year</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in participants %}
+                    <tr>
+                        <td>
+                            <span class="ticket-code-badge py-1 px-2" style="font-size: 0.82rem;">{{ p.ticket_code }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold">{{ p.student_name }}</div>
+                            <span class="badge bg-success-subtle text-success" style="font-size: 0.68rem;">Verified</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-dark-subtle text-muted font-monospace">{{ p.student_id }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary">{{ p.department }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-truncate" style="max-width: 200px;" title="{{ p.event_title }}">
+                                {{ p.event_title }}
+                            </div>
+                            <span class="badge badge-{{ p.event_category|lower }}" style="font-size: 0.65rem;">{{ p.event_category }}</span>
+                        </td>
+                        <td class="small text-muted">{{ p.year_of_study or 'N/A' }}</td>
+                        <td class="small">{{ p.phone or 'N/A' }}</td>
+                        <td class="small text-muted font-monospace">{{ p.student_email }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="display-4 text-muted mb-3">📋</div>
+            <h5 class="fw-bold">No Registrations Match Filters</h5>
+            <p class="text-muted small">Try broadening your search term or selecting 'All' departments and events.</p>
+            <a href="{{ url_for('participants') }}" class="btn btn-sm btn-gradient mt-2">Reset Filters</a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CampusSphere AI - Smart College Event Management Agent{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20%220%22%20%22100%22%20%22100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Main Navigation Bar -->
+    <nav class="navbar navbar-expand-lg custom-navbar">
+        <div class="container-fluid px-lg-4">
+            <!-- Brand Logo -->
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <div class="brand-icon-box">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <span class="gradient-text">CampusSphere</span>
+                    <span class="badge bg-gradient-primary ms-1" style="font-size: 0.65rem; vertical-align: middle;">AI AGENT</span>
+                </div>
+            </a>
+
+            <!-- Mobile Hamburger Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fas fa-bars text-primary fs-4"></i>
+            </button>
+
+            <!-- Navbar Links -->
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-th-large text-primary"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'events' %}active{% endif %}" href="{{ url_for('events') }}">
+                            <i class="fas fa-calendar-alt text-danger"></i> Events
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'register' %}active{% endif %}" href="{{ url_for('register') }}">
+                            <i class="fas fa-ticket-alt text-success"></i> Register
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'participants' %}active{% endif %}" href="{{ url_for('participants') }}">
+                            <i class="fas fa-users text-info"></i> Participants
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}" href="{{ url_for('reports') }}">
+                            <i class="fas fa-chart-pie text-warning"></i> Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-gradient {% if request.endpoint == 'ai_agent_page' %}active{% endif %}" href="{{ url_for('ai_agent_page') }}" style="font-weight: 700;">
+                            <i class="fas fa-sparkles text-purple"></i> AI Assistant
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Right Action Bar -->
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Notification Bell Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-glass position-relative p-2 px-3" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                            <i class="far fa-bell fs-5"></i>
+                            {% if unread_notifs_count > 0 %}
+                            <span id="unreadNotifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                                {{ unread_notifs_count }}
+                            </span>
+                            {% endif %}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end notif-dropdown p-0 shadow-lg" aria-labelledby="notifDropdown">
+                            <li class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light-subtle">
+                                <span class="fw-bold fs-6"><i class="fas fa-bell me-2 text-primary"></i> Notifications</span>
+                                <span class="badge bg-primary-subtle text-primary">{{ recent_notifs|length }} Recent</span>
+                            </li>
+                            {% if recent_notifs %}
+                                {% for n in recent_notifs %}
+                                <li class="notif-item" onclick="markNotificationAsRead({{ n.id }}, this)" style="cursor: pointer;">
+                                    <div class="notif-icon mt-1">
+                                        {% if n.type == 'event' %}
+                                            <span class="badge bg-primary-subtle text-primary p-2"><i class="fas fa-calendar-plus"></i></span>
+                                        {% elif n.type == 'success' %}
+                                            <span class="badge bg-success-subtle text-success p-2"><i class="fas fa-check-circle"></i></span>
+                                        {% elif n.type == 'warning' %}
+                                            <span class="badge bg-warning-subtle text-warning p-2"><i class="fas fa-exclamation-triangle"></i></span>
+                                        {% else %}
+                                            <span class="badge bg-info-subtle text-info p-2"><i class="fas fa-info-circle"></i></span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold small">{{ n.title }}</div>
+                                        <div class="text-muted" style="font-size: 0.8rem;">{{ n.message }}</div>
+                                        <div class="text-muted small mt-1" style="font-size: 0.72rem;"><i class="far fa-clock me-1"></i> {{ n.created_at[:16] }}</div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            {% else %}
+                                <li class="p-4 text-center text-muted small">No notifications yet.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Dark / Light Mode Toggle -->
+                    <button id="themeToggleBtn" class="btn btn-glass p-2 px-3" type="button" aria-label="Toggle theme">
+                        <i class="fas fa-moon text-dark"></i>
+                    </button>
+
+                    <!-- Add Event Button -->
+                    <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#createEventModal">
+                        <i class="fas fa-plus-circle me-1"></i> Create Event
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Global Flash Messages -->
+    <div class="container-fluid px-lg-4 mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0 d-flex align-items-center gap-2" role="alert">
+                        <i class="fas fa-info-circle"></i>
+                        <div>{{ message }}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Page Content Block -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Create Event Modal -->
+    <div class="modal fade" id="createEventModal" tabindex="-1" aria-labelledby="createEventModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content custom-card p-0 border-0">
+                <div class="modal-header border-bottom p-4 bg-gradient-primary text-white">
+                    <h5 class="modal-title fw-bold" id="createEventModalLabel">
+                        <i class="fas fa-calendar-plus me-2"></i> Create New College Event
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createEventForm">
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Event Title <span class="text-danger">*</span></label>
+                                <input type="text" name="title" class="form-control" placeholder="e.g. InnovateX 2026: National Tech Symposium" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Category <span class="text-danger">*</span></label>
+                                <select name="category" class="form-select" onchange="updatePosterPreview(this.value)" required>
+                                    <option value="Technical">Technical</option>
+                                    <option value="Cultural">Cultural</option>
+                                    <option value="Sports">Sports</option>
+                                    <option value="Workshop">Workshop</option>
+                                    <option value="Seminar">Seminar</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description <span class="text-danger">*</span></label>
+                                <textarea name="description" class="form-control" rows="3" placeholder="Provide highlights, rules, perks, and target participants..." required></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Date <span class="text-danger">*</span></label>
+                                <input type="date" name="event_date" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Time <span class="text-danger">*</span></label>
+                                <input type="text" name="event_time" class="form-control" placeholder="e.g. 10:00 AM" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Max Capacity <span class="text-danger">*</span></label>
+                                <input type="number" name="capacity" class="form-control" value="150" min="1" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Venue / Hall <span class="text-danger">*</span></label>
+                                <input type="text" name="venue" class="form-control" placeholder="e.g. Central Auditorium or Lab 4" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Organizing Body / Department</label>
+                                <input type="text" name="organizer" class="form-control" placeholder="e.g. Dept. of CSE & AI Society" value="Student Council & CSE Dept">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Poster Image URL (Royalty-free picture)</label>
+                                <input type="url" name="poster_url" id="eventPosterInput" class="form-control" placeholder="https://images.unsplash.com/..." value="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80">
+                                <div class="mt-2 text-center">
+                                    <img id="posterPreviewImg" src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80" alt="Preview" style="height: 100px; width: 100%; object-fit: cover; border-radius: 8px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer p-3 border-top bg-light-subtle">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="createEventSubmitBtn" class="btn btn-gradient">
+                            <i class="fas fa-plus-circle me-1"></i> Publish Event
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Digital Ticket Confirmation Modal -->
+    <div class="modal fade" id="digitalTicketModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 bg-transparent">
+                <div class="ticket-pass animate-fade-in">
+                    <div class="text-center mb-3">
+                        <div class="display-6">🎉 🎟️ ✨</div>
+                        <h4 class="fw-bold mt-2 gradient-text">Registration Confirmed!</h4>
+                        <p class="text-muted small">Show this digital pass at the entrance desk.</p>
+                    </div>
+                    <div class="ticket-header">
+                        <div>
+                            <span class="badge bg-primary" id="ticketCategoryBadge">Technical</span>
+                            <div class="fw-bold fs-5 mt-1" id="ticketEventTitle">Event Title</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="ticket-code-badge" id="ticketPassCode">PASS-TECH-XXXXX</div>
+                        </div>
+                    </div>
+                    <div class="ticket-body-grid mb-3">
+                        <div class="ticket-field">
+                            <label>Student Name</label>
+                            <span id="ticketStudentName">John Doe</span>
+                        </div>
+                        <div class="ticket-field">
+                            <label>Student ID</label>
+                            <span id="ticketStudentId">23CSE001</span>
+                        </div>
+                        <div class="ticket-field">
+                            <label>Department</label>
+                            <span id="ticketDepartment">CSE</span>
+                        </div>
+                        <div class="ticket-field">
+                            <label>Status</label>
+                            <span class="badge bg-success-subtle text-success">Verified Pass</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center mt-4">
+                        <button type="button" class="btn btn-outline-primary rounded-3" onclick="copyTicketCode()">
+                            <i class="far fa-copy me-1"></i> Copy Pass Code
+                        </button>
+                        <button type="button" class="btn btn-gradient" onclick="printTicketPass()">
+                            <i class="fas fa-print me-1"></i> Print / Save Pass
+                        </button>
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Done</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="custom-footer">
+        <div class="container-fluid px-lg-5">
+            <div class="row align-items-center gy-3">
+                <div class="col-md-6 text-center text-md-start">
+                    <div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start mb-1">
+                        <div class="brand-icon-box" style="width: 28px; height: 28px; font-size: 0.9rem;">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <span class="fw-bold fs-6 gradient-text">CampusSphere AI</span>
+                        <span class="badge bg-dark-subtle text-muted" style="font-size: 0.72rem;">v2.0</span>
+                    </div>
+                    <p class="small text-muted mb-0">Smart College Event Management Agent — Seamless Event Orchestration & AI Operations.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <div class="d-flex gap-2 justify-content-center justify-content-md-end flex-wrap">
+                        <span class="badge bg-primary-subtle text-primary"><i class="fab fa-python me-1"></i> Python Flask</span>
+                        <span class="badge bg-success-subtle text-success"><i class="fas fa-database me-1"></i> SQLite</span>
+                        <span class="badge bg-info-subtle text-info"><i class="fas fa-chart-line me-1"></i> Chart.js</span>
+                        <span class="badge bg-warning-subtle text-warning"><i class="fas fa-sparkles me-1"></i> Google Gemini AI</span>
+                    </div>
+                    <p class="small text-muted mt-2 mb-0">© {{ current_year }} Smart College Event Management System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Main JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/events.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
